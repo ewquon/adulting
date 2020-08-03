@@ -1,7 +1,8 @@
 import pandas as pd
 
 class RegularTransfer(object):
-    def __init__(self,from_acct,to_acct,amount,interval,biweekly_offset=0):
+    def __init__(self,from_acct,to_acct,amount,interval,
+                 biweekly_offset=0,biweekly_day=0):
         self.from_acct = from_acct
         self.to_acct = to_acct
         self.amount = amount
@@ -11,6 +12,8 @@ class RegularTransfer(object):
             if interval == 'biweekly':
                 assert biweekly_offset in (0,1)
                 self.biweekly_offset = biweekly_offset
+                assert biweekly_day in range(7)
+                self.biweekly_day = biweekly_day
             else:
                 interval = getattr(pd.tseries.offsets, interval)
         self.interval = interval
@@ -18,7 +21,7 @@ class RegularTransfer(object):
     def update(self,date):
         make_payment = False
         if self.interval == 'biweekly':
-            if (date.dayofweek == 0) and (date.week % 2 == self.biweekly_offset):
+            if (date.dayofweek == self.biweekly_day) and (date.week % 2 == self.biweekly_offset):
                 make_payment = True
         elif isinstance(self.interval,int):
             if date.day == self.interval:
@@ -44,7 +47,8 @@ class FinancialSimulation(object):
         self.accounts = {acct.name: acct for acct in accts}
         self.scheduled_payments = []
 
-    def regular_transfer(self,from_acct,to_acct,amount,interval,biweekly_offset=0):
+    def regular_transfer(self,from_acct,to_acct,amount,interval,
+                         biweekly_offset=0,biweekly_day=0):
         """
         Parameters
         ----------
@@ -58,13 +62,18 @@ class FinancialSimulation(object):
         biweekly_offset : int, optional
             If interval is "biweekly", this allows specifying even
             (default) or odd weeks with 0 or 1, respectively
+        biweekly_day : int, optional
+            If interval is "biweekly", this allows specifying the day of
+            th week (0 is monday)
         """
         if from_acct in self.accounts.keys():
             from_acct = self.accounts[from_acct]
         if to_acct in self.accounts.keys():
             to_acct = self.accounts[to_acct]
         self.scheduled_payments.append(
-            RegularTransfer(from_acct,to_acct,amount,interval,biweekly_offset)
+            RegularTransfer(from_acct,to_acct,
+                            amount,interval,
+                            biweekly_offset,biweekly_day)
         )
 
     def run(self,years=30,cleanup=True):

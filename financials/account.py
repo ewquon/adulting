@@ -112,7 +112,7 @@ class Savings(Account):
         interest_rate = 100 * ((1+APY/100)**(1.0/N) - 1)
         super().__init__(name,balance,interest_rate,compound_on)
         if self.verbose:
-            print('calculated annual periods for APY interest rate:',N)
+            print('annual periods for APY interest rate:',N)
             print(f'calculated interest rate = {self.interest_rate:g}%')
 
 
