@@ -60,7 +60,7 @@ class Account(object):
 
 
 class Savings(Account):
-    def __init__(self,name,balance,APY,compounding='monthly',day=1):
+    def __init__(self,name,balance,APY,compound_on=1):
         """
         Parameters
         ----------
@@ -70,22 +70,25 @@ class Savings(Account):
             Starting balance
         APY : float
             Annual percentage yield [%]
-        compounding : str
-            Type of compounding--see `account.compounding_types`
-        day : int (or str)
-            Integer day of month (or 'last') for monthly compounding
+        compound_on : int or str
+            Integer day of month or pandas timeseries offset string
+            (e.g., "MonthEnd")--see `pandas.tseries.offsets`
         """
-        if compounding == 'monthly':
+        if isinstance(compound_on,int) or compound_on=='MonthEnd':
             N = 12
+        else:
+            offset = getattr(pd.tseries.offsets,compound_on)
+            N = len(pd.date_range('2000-01-01','2000-12-31',freq=offset(1)))
         interest_rate = 100 * ((1+APY/100)**(1.0/N) - 1)
-        super().__init__(name,balance,interest_rate)
+        super().__init__(name,balance,interest_rate,compound_on)
         if self.verbose:
+            print('calculated annual periods for APY interest rate:',N)
             print(f'calculated interest rate = {self.interest_rate:g}%')
 
 
 class Loan(Account):
     """Loan with annual percentage rate"""
-    def __init__(self,name,balance,interest_rate,compounding='monthly',day=1):
+    def __init__(self,name,balance,interest_rate,compound_on=1):
         """
         Parameters
         ----------
@@ -95,13 +98,12 @@ class Loan(Account):
             Starting balance
         interest_rate : float
             Fixed interest rate [%]
-        compounding : str
-            Type of compounding--see `account.compounding_types`
-        day : int (or str)
-            Integer day of month (or 'last') for monthly compounding
+        compound_on : int or str
+            Integer day of month or pandas timeseries offset string
+            (e.g., "MonthEnd")--see `pandas.tseries.offsets`
         """
         assert balance < 0, 'debt should have a negative balance'
-        super().__init__(name,balance,interest_rate)
+        super().__init__(name,balance,interest_rate,compound_on)
 
     def init(self,tseries):
         self.last_update = tseries[0]
