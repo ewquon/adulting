@@ -63,6 +63,32 @@ class Account(object):
                 print(date,'update balance of',self.name)
             self.last_update = date
 
+    def deposit(self,date,amount,from_acct):
+        current_balance = self.df.loc[self.last_update,'balance']
+        self.df.loc[date,'balance'] = current_balance + amount
+        if isinstance(from_acct,str):
+            from_acct_name = from_acct
+        else:
+            from_acct_name = from_acct.name
+        if pd.isna(self.df.loc[date,'deposit_from']):
+            self.df.loc[date,'deposit_from'] = from_acct_name
+        else:
+            self.df.loc[date,'deposit_from'] += ',' + from_acct_name
+        self.last_update = date 
+
+    def withdraw(self,date,amount,to_acct):
+        current_balance = self.df.loc[self.last_update,'balance']
+        self.df.loc[date,'balance'] = current_balance - amount
+        if isinstance(to_acct,str):
+            to_acct_name = to_acct
+        else:
+            to_acct_name = to_acct.name
+        if pd.isna(self.df.loc[date,'withdrawal_to']):
+            self.df.loc[date,'withdrawal_to'] = to_acct_name
+        else:
+            self.df.loc[date,'withdrawal_to'] += ',' + to_acct_name
+        self.last_update = date 
+
     def finalize(self):
         self.df = self.df.dropna(how='all')
 
@@ -146,3 +172,29 @@ class Loan(Account):
             if self.verbose:
                 print(date,':',self.name,'is already paid off! Zeroing principal')
         
+    def deposit(self,date,amount,from_acct):
+        """A.k.a. make a payment"""
+        current_principal = self.df.loc[self.last_update,'principal']
+        current_interest = self.df.loc[self.last_update,'interest_due']
+        toward_interest = min(amount,-current_interest)
+        toward_principal = amount - toward_interest
+        self.df.loc[date,'principal'] = current_principal + toward_principal
+        self.df.loc[date,'interest_paid'] = toward_interest
+        self.df.loc[date,'interest_due'] = current_interest + toward_interest
+        if isinstance(from_acct,str):
+            from_acct_name = from_acct
+        else:
+            from_acct_name = from_acct.name
+        if pd.isna(self.df.loc[date,'deposit_from']):
+            self.df.loc[date,'deposit_from'] = from_acct_name
+        else:
+            self.df.loc[date,'deposit_from'] += ',' + from_acct_name
+        self.last_update = date
+
+    def withdraw(self,date,amount,to_acct):
+        raise RuntimeError('Withdrawal from a loan account is not defined')
+
+    def finalize(self):
+        super().finalize()
+        assert np.all(self.df['interest_due'] == 0)
+        self.df = self.df.drop(columns='interest_due')
