@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 class RegularTransfer(object):
@@ -36,6 +37,10 @@ class RegularTransfer(object):
                 self.from_acct.withdraw(date,self.amount,self.to_acct)
             if not isinstance(self.to_acct,str):
                 self.to_acct.deposit(date,self.amount,self.from_acct)
+
+
+def round_cents(amount):
+    return np.round(amount, decimals=2)
         
 
 class FinancialSimulation(object):
