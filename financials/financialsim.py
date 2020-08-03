@@ -3,6 +3,9 @@ import pandas as pd
 class FinancialSimulation(object):
     """Container class for accounts"""
     def __init__(self,*accts):
+        acctnames = [acct.name for acct in accts]
+        assert len(acctnames) == len(set(acctnames)), \
+                'Names given to accounts not unique: '+str(acctnames)
         self.accounts = {acct.name: acct for acct in accts}
 
     def run(self,years=30,cleanup=True):
