@@ -114,8 +114,9 @@ class Loan(Account):
     def init(self,tseries):
         self.last_update = tseries[0]
         self.df = pd.DataFrame(index=tseries,
-                               columns=['principal','interest_due'])
+                               columns=['principal','interest_paid','interest_due','deposit_from'])
         self.df.loc[tseries[0],'principal'] = self.init_balance
+        self.df.loc[tseries[0],'interest_due'] = 0.0
 
     def update(self,date):
         if self.interest_rate == 0:
@@ -132,9 +133,9 @@ class Loan(Account):
         if compound_interest:
             current_principal = self.df.loc[self.last_update,'principal']
             self.df.loc[date,'principal'] = current_principal
-            self.df.loc[date,'interest_due'] = current_principal*(1+self.interest_rate/100)
+            self.df.loc[date,'interest_due'] = current_principal*self.interest_rate/100
             if self.verbose:
-                print(date,'update interest of',self.name)
+                print(date,'update interest due for',self.name)
             self.last_update = date
         if self.df.loc[self.last_update,'principal'] >= 0:
             print(date,':',self.name,'paid off!')
