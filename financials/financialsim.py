@@ -31,7 +31,7 @@ class RegularTransfer(object):
             if date == target_date:
                 make_payment = True
         if make_payment:
-            print(date,'transfer',self.amount)
+            print(date,'transfer',self.amount,'from',self.from_acct,'to',self.to_acct)
             if not isinstance(self.from_acct,str):
                 self.from_acct.withdraw(date,self.amount,self.to_acct)
             if not isinstance(self.to_acct,str):

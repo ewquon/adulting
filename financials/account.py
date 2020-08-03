@@ -38,6 +38,9 @@ class Account(object):
             self.compound_on_day = None
         self.verbose = verbose # DEBUG
 
+    def __str__(self):
+        return f'{self.name} ({self.__class__.__name__})'
+
     def init(self,tseries):
         self.last_update = tseries[0]
         self.df = pd.DataFrame(index=tseries,
