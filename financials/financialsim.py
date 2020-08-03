@@ -71,15 +71,19 @@ class FinancialSimulation(object):
             If interval is "biweekly", this allows specifying the day of
             th week (0 is monday)
         """
-        if from_acct in self.accounts.keys():
-            from_acct = self.accounts[from_acct]
-        if to_acct in self.accounts.keys():
-            to_acct = self.accounts[to_acct]
-        self.scheduled_payments.append(
-            RegularTransfer(from_acct,to_acct,
-                            amount,interval,
-                            biweekly_offset,biweekly_day)
-        )
+        assert amount >= 0, 'transfer amounts should be > 0'
+        if amount > 0:
+            if from_acct in self.accounts.keys():
+                from_acct = self.accounts[from_acct]
+            if to_acct in self.accounts.keys():
+                to_acct = self.accounts[to_acct]
+            self.scheduled_payments.append(
+                RegularTransfer(from_acct,to_acct,
+                                amount,interval,
+                                biweekly_offset,biweekly_day)
+            )
+        else:
+            print(f'Transfer ($0) between {from_acct} and {to_acct} was not set up')
 
     def run(self,years=30,cleanup=True):
         startdate = pd.to_datetime('now').round('D')
