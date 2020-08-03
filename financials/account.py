@@ -1,6 +1,14 @@
 import numpy as np
 import pandas as pd
 
+def get_num_periods(compound_on):
+    if isinstance(compound_on,int) or compound_on=='MonthEnd':
+        N = 12
+    else:
+        offset = getattr(pd.tseries.offsets,compound_on)
+        N = len(pd.date_range('2000-01-01','2000-12-31',freq=offset(1)))
+    return N
+
 class Account(object):
     """Account with compounding interest"""
     def __init__(self, name, balance, interest_rate=0,
@@ -74,11 +82,7 @@ class Savings(Account):
             Integer day of month or pandas timeseries offset string
             (e.g., "MonthEnd")--see `pandas.tseries.offsets`
         """
-        if isinstance(compound_on,int) or compound_on=='MonthEnd':
-            N = 12
-        else:
-            offset = getattr(pd.tseries.offsets,compound_on)
-            N = len(pd.date_range('2000-01-01','2000-12-31',freq=offset(1)))
+        N = get_num_periods(compound_on)
         interest_rate = 100 * ((1+APY/100)**(1.0/N) - 1)
         super().__init__(name,balance,interest_rate,compound_on)
         if self.verbose:
@@ -103,7 +107,9 @@ class Loan(Account):
             (e.g., "MonthEnd")--see `pandas.tseries.offsets`
         """
         assert balance < 0, 'debt should have a negative balance'
-        super().__init__(name,balance,interest_rate,compound_on)
+        N = get_num_periods(compound_on)
+        interest_rate_per_period = interest_rate / N
+        super().__init__(name,balance,interest_rate_per_period,compound_on)
 
     def init(self,tseries):
         self.last_update = tseries[0]
